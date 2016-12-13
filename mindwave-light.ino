@@ -58,7 +58,7 @@ sw_t Sleep_or_Work = WORK;
   void SoftwareSerial_init( void ){
     pinMode( 8, INPUT );
     pinMode( 7, OUTPUT );
-    mySerial.begin(9600);
+    mySerial.begin(57600);                            // 与蓝牙模块连接的波特率
  }
 #endif
 
