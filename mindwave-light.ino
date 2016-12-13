@@ -12,12 +12,29 @@
  #include "mindwave_light.h"
 
  #define DEBUG
+ #define mwLight_DEBUG
 
  #ifdef DEBUG
-  const uint8_t TEST_LED=13;
+  const uint8_t TEST_LED = 13;
   void testLED_blink( void );
-  const uint8_t DEBUG_LED = 12;
+  
+  const uint8_t DEBUG_R = 10;
+  const uint8_t DEBUG_G = 11;
+  const uint8_t DEBUG_Y = 12;
+  void DEBUG_LED_init(){
+    pinMode( DEBUG_R, OUTPUT );    digitalWrite ( DEBUG_R, HIGH );               /* vcc|-----|\/\/\----|>|------|=> D12 */ 
+    pinMode( DEBUG_G, OUTPUT );    digitalWrite ( DEBUG_G, HIGH );
+    pinMode( DEBUG_Y, OUTPUT );    digitalWrite ( DEBUG_Y, HIGH );      /* vcc|-----|\/\/\----|>|------|=> D10 */     
+  }
  #endif /* DEBUG */
+
+#ifdef mwLight_DEBUG
+  void RXD_ON(void){  digitalWrite( DEBUG_G, LOW );
+  void RXD_OFF(void){ digitalWrite( DEBUG_G, HIGH);
+
+  void SYN_ON(void){  digitalWrite( DEBUG_R, LOW);
+  void SYN_OFF(void){ digitalWrite(DEBUG_R, HIGH);
+#endif /* mwLight_DEBUG */
 
 /******* main ************************/
 
@@ -27,21 +44,11 @@
  const uint8_t BLE_STA = 5;
  const uint8_t BLE_EN = 4;
 
-/* 指示灯相关定义 */
- const uint8_t getSYN = 12;
- const uint8_t getBLE_data = 11;
- const uint8_t connect_OK = 10;
-
- void indicatorLED_init( void ){
-    pinMode( getSYN, OUTPUT );    digitalWrite ( getSYN, HIGH );               /* vcc|-----|\/\/\----|>|------|=> D12 */ 
-    pinMode( getBLE_data, OUTPUT );    digitalWrite ( getBLE_data, LOW );
-    pinMode( connect_OK, OUTPUT );    digitalWrite ( connect_OK, HIGH );      /* vcc|-----|\/\/\----|>|------|=> D10 */ 
- }
 
  // 脑波灯需要对象、标志位等相关...
  //const uint8_t interruptPin = 2;
 
- mwData_t mindwaveLight;
+ mwData_t mindwaveLight;                // 定义一个脑波数据对象，包含了接收成功标志位、专注度、放松度的值 等
 
 
 /* 12/09 11:17 加入按键中断 */
@@ -50,8 +57,9 @@ typedef enum{ MEDITATION=0, ATTENTION,  TURN_OFF }MODE_t;
 //typedef enum{ TURN_ON = 0, TURN_OFF }MODE_t;
 MODE_t chooseOneMode = MEDITATION;
 
+/*** 大灯专有属性，按键切换模式，进入关闭状态（睡眠） ***/
 typedef enum{ SLEEP = 0, WORK }sw_t;
-sw_t Sleep_or_Work = WORK;
+sw_t Sleep_or_Work = WORK;                 // 定义初始状态在工作状态
 
 #if 1
   SoftwareSerial mySerial =  SoftwareSerial(8, 7);
@@ -62,18 +70,53 @@ sw_t Sleep_or_Work = WORK;
  }
 #endif
 
-void BLE_INIT(){
-     pinMode( BLE_STA, INPUT );
-     pinMode( BLE_EN, OUTPUT );
-     digitalWrite ( BLE_EN, HIGH );
+
+/*================= 蓝牙模块相关 ==================================*/
+ /*** 定义蓝牙引脚控制对象 ***/
+ typedef struct {
+  uint8_t EN_pin;
+  uint8_t STA_pin;
+  uint8_t KEY_pin;
+  uint8_t RXD_pin;
+  uint8_t TXD_pin;
+ }BLE_MCUpin_t;
+ void BLE_MCUpin_init( BLE_MCUpin_t *_pin_t){
+  pinMode( _pin_t->EN_pin; OUTPUT );  digitalWrite ( _pin_t->EN_pin, HIGH );        // ldo工作，模块使能
+  pinMode( _pin_t->STA_pin; INPUT );  //digitalWrite ( _pin_t->STA_pin, HIGH );
+  pinMode( _pin_t->KEY_pin; OUTPUT ); digitalWrite ( _pin_t->KEY_pin, HIGH );       // KEY拉高，配对模式；拉低，AT模式
+  //pinMode( _pin_t->RXD_pin; INPUT );              //  MCU   rxd|<= ------- <=| TXD   HC-05
+  //pinMode( _pin_t->TXD_pin; OUTPUT );             //        txd|=> ------- =>| RXD
+ }
+
+#if 0
+ typedef struct {
+  uint8_t name[20];
+  uint8_t pswd[10];
+  uint8_t role;
+  uint8_t baud[10];
+ } BLE_data_t
+#endif /* 0 or 1 */
+/*===============end 蓝牙模块相关 ===================================*/
+
+/*** 定义蓝牙模块在本实例电路中连接的引脚 ***/
+BLE_MCUpin_t mwLight_BLEpin;      // 在定义一个struct 对象时，如何初始化？
+void constructePin( BLE_MCUpin_t *_mwLight_BLEpin ){
+  // 面向过程的函数，实例化，在初始化时调用
+  _mwLight_BLEpin->EN_pin = 4;
+  _mwLight_BLEpin->STA_pin = 5;
+  _mwLight_BLEpin->RXD_pin = 8;
+  _mwLight_BLEpin->TXD_pin = 7;  
 }
+// constructePin( mwLight_BLEpin );       // 调用本句在初始化函数段中
+
 
 
 void setup(){
-	SoftwareSerial_init();
-  BLE_INIT();
-  RGB_light_init();  
-  indicatorLED_init();
+	SoftwareSerial_init();                          // 与蓝牙连接的IO口-> 模拟串口初始化
+  constructePin( &mwLight_BLEpin )                // 在函数中构造蓝牙模块各个控制引脚
+  BLE_MCUpin_init( &mwLight_BLEpin );            // 蓝牙模块的各个控制引脚（状态）初始化--> 对象以MCU为标准命名
+  RGB_light_init();                              // 脑波灯（RGB三色灯） 控制引脚初始化
+  DEBUG_LED_init();                              // 调试指示灯控制引脚初始化
   pinMode( TEST_LED, OUTPUT );    digitalWrite ( TEST_LED, LOW );
 	structureMindwaveData( &mindwaveLight );			// 初始化对象数据
   
