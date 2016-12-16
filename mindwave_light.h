@@ -40,12 +40,18 @@
 #endif /* 0 or 1 */
 
 
- void structureMindwaveData( mwData_t* _mwLight );
- void cleanProtocol(uint8_t array[], uint16_t length );
+// void structureMindwaveData( mwData_t* _mwLight );
+void structureMindwaveData();
+// void cleanProtocol(uint8_t array[], uint16_t _length );
+void cleanProtocol( );
 // void getMindwaveData( mwData_t* _mwLight, SoftwareSerial *_mySerial );
-void getMindwaveData( mwData_t* _mwLight, uint8_t _BLE_data );
+//void getMindwaveData( mwData_t* _mwLight, uint8_t _BLE_data );
+void getMindwaveData(uint8_t _BLE_data );
 
 
-
+void set_Got_data(pf_t PASS_or_FAIL);
+pf_t ifSuccess_got_data();
+uint8_t getAttention();
+uint8_t getMeditation();
 
 #endif /* MINDWAVE_LIGHT_H */
