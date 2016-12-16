@@ -11,24 +11,13 @@
  #include <hardwareDrive.h>
  #include "mindwave_light.h"
 
- //#include "BLE.h"
+ #include "BLE.h"
  #include "debug.h"
 
  #define DEBUG
  #define mwLight_DEBUG
 
 /*================= 蓝牙模块相关  BLE.h ==================================*/
- /*** 定义蓝牙引脚控制对象 ***/
-typedef struct BLE_module{
-    unsigned int EN_PIN;
-    unsigned int STA_PIN;
-    unsigned int KEY_PIN;
-
-    //unsigned int RX_PIN;
-    //unsigned int TX_PIN;
-} BLE_module_t;
-void BLE_PIN_config( BLE_module_t *_pin);
-void BLE_PIN_INIT( BLE_module_t *_BLE_PIN);
 /*================= end 蓝牙模块相关 ==================================*/
 
 
@@ -102,21 +91,7 @@ void setup(){
 color_t lightColor = FOOCOLOR;              // RBG灯对象，设定颜色即可
 uint8_t Rx_data;                            // 从连接蓝牙模块的虚拟串口接收到的数据
 /***************************   loop()   *************************/
-#if 0
-void loop(){	
-    if ( Sleep_or_Work == SLEEP ){                    // 进入低功耗模式
-    digitalWrite ( BLElight.EN_PIN, LOW );                   // 这一句后期调整成面向对象模式
-    if( chooseOneMode == TURN_OFF ){
-      // digitalWrite( 11, HIGH );
-      lightColor = FOOCOLOR;
-      setLightColor( FOOCOLOR );
-    }
-  } // end if SLEEP
-  
-} // end LOOP
-#endif
-
- void loop(){
+void loop(){
     if ( Sleep_or_Work == SLEEP ){                            // 进入低功耗模式
         digitalWrite ( BLElight.EN_PIN, LOW );                // 这一句后期调整成面向对象模式
         if( chooseOneMode == TURN_OFF ){
@@ -213,20 +188,4 @@ void chooseMode(void){
 
 
 
-/*---------------- BLE.c ---------------------------------------*/
-void BLE_PIN_config( BLE_module_t *_pin){
-  _pin->EN_PIN = 4;
-  _pin->STA_PIN = 5;
-  _pin->KEY_PIN = 6;
-}
 
-void BLE_PIN_INIT( BLE_module_t *_BLE_PIN){
-    pinMode( _BLE_PIN->EN_PIN, OUTPUT );
-    pinMode( _BLE_PIN->STA_PIN, INPUT );            // 看是否需要放一个下拉电阻
-    pinMode( _BLE_PIN->KEY_PIN, OUTPUT );
-
-    digitalWrite( _BLE_PIN->EN_PIN, HIGH );         // 低电平断电
-    digitalWrite( _BLE_PIN->KEY_PIN, LOW );         // 拉高进入AT模式
-
-}
-/*---------------- end BLE.c ---------------------------------------*/
