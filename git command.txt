@@ -1,0 +1,10 @@
+
+git status
+
+git add <new files>
+
+git status  #or git diff
+
+git commit -m "your declare"
+
+git push	#可以在github上看到最新上传的了
